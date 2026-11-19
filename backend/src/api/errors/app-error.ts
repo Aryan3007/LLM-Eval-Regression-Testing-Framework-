@@ -1,0 +1,24 @@
+/** A typed error the central error handler turns into an HTTP response. */
+export class AppError extends Error {
+  constructor(
+    public readonly statusCode: number,
+    public readonly code: string,
+    message: string,
+    public readonly details?: unknown,
+  ) {
+    super(message);
+    this.name = 'AppError';
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message = 'Resource not found') {
+    super(404, 'NOT_FOUND', message);
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(details: unknown, message = 'Request validation failed') {
+    super(400, 'VALIDATION_ERROR', message, details);
+  }
+}

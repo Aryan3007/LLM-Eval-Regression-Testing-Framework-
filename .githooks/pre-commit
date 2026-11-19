@@ -1,0 +1,27 @@
+#!/bin/sh
+# Runs fast checks only for the projects that have staged changes.
+# Enabled by `pnpm install` in backend/ (sets core.hooksPath). Skip once with `git commit --no-verify`.
+set -e
+
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
+if echo "$staged" | grep -q '^backend/'; then
+  echo "pre-commit: checking backend..."
+  pnpm -C backend -s format:check
+  pnpm -C backend -s lint
+  pnpm -C backend -s typecheck
+fi
+
+if echo "$staged" | grep -q '^frontend/'; then
+  echo "pre-commit: checking frontend..."
+  pnpm -C frontend -s format:check
+  pnpm -C frontend -s lint
+  pnpm -C frontend -s typecheck
+fi
+
+if echo "$staged" | grep -q '^examples/docsbot/'; then
+  echo "pre-commit: checking examples/docsbot..."
+  pnpm -C examples/docsbot -s format:check
+  pnpm -C examples/docsbot -s lint
+  pnpm -C examples/docsbot -s typecheck
+fi

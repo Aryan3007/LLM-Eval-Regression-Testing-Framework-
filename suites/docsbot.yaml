@@ -1,0 +1,40 @@
+# DocsBot: the demo RAG app in examples/docsbot. Paths are relative to this file.
+suite: docsbot
+description: RAG assistant over the FastAPI 0.115.0 docs
+
+target:
+  type: http
+  label: docsbot
+  url: ${DOCSBOT_URL:-http://localhost:8001}/v1/ask
+  body: { question: '{{ input }}' }
+  output: $.answer
+  context: $.sources[*].text
+  usage:
+    input_tokens: $.usage.promptTokens
+    output_tokens: $.usage.completionTokens
+  # Set to your CHAT_MODEL's price (USD per million tokens) to see cost per run.
+  # pricing: { input_per_mtok: 0.4, output_per_mtok: 1.6 }
+
+dataset:
+  path: ../examples/docsbot/dataset.jsonl
+
+# Fixed grader. Prefer a different model family from DocsBot's CHAT_MODEL to limit self-preference bias.
+judge:
+  provider: ${JUDGE_PROVIDER:-openai}
+  model: ${JUDGE_MODEL}
+
+run:
+  concurrency: 8
+
+scorers:
+  - type: llm_judge
+    name: correctness
+    rubric: rubrics/correctness.md
+    pass_at: 0.75
+  # A rubric-based stand-in until the claim-level faithfulness scorer lands in phase 2.
+  - type: llm_judge
+    name: grounded
+    rubric: rubrics/grounded.md
+    pass_at: 0.75
+  - type: not_contains
+    value: 'As an AI language model'
